@@ -1,4 +1,4 @@
-local Players = game:GetService("Players")
+Local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local SoundService = game:GetService("SoundService")
 
@@ -15,11 +15,11 @@ screenGui.ResetOnSpawn = false
 local lastSeen = {}
 local currentPreview = nil
 
--- [ ١. دوگمه‌یا خڕ یا لایێ شاشێ - ناڤێ وێ بوو K3 ]
+-- [ ١. دوگمه‌یا خڕ یا لایێ شاشێ ]
 local toggleBtn = Instance.new("TextButton", screenGui)
 toggleBtn.Size = UDim2.new(0, 55, 0, 55)
 toggleBtn.Position = UDim2.new(0, 10, 0.5, 0)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0) -- ڕه‌نگێ سوورێ تاری
+toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
 toggleBtn.Text = "K3"
 toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 toggleBtn.Font = Enum.Font.GothamBold
@@ -37,7 +37,6 @@ panel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 panel.Visible = true
 Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
--- فه‌نكشنا ونكرن و دیاركرنێ
 toggleBtn.MouseButton1Click:Connect(function()
     panel.Visible = not panel.Visible
     toggleBtn.BackgroundColor3 = panel.Visible and Color3.fromRGB(40, 0, 0) or Color3.fromRGB(0, 80, 0)
@@ -55,35 +54,42 @@ title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.GothamBold
 title.BackgroundTransparency = 1
 
+-- [ چاککرنا سکرۆلێ ل ڤێرێ ]
 local scroll = Instance.new("ScrollingFrame", panel)
 scroll.Size = UDim2.new(1, -20, 1, -70)
 scroll.Position = UDim2.new(0, 10, 0, 60)
 scroll.BackgroundTransparency = 1
-scroll.ScrollBarThickness = 5
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.ScrollBarThickness = 6
+scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0) -- بلا سفر بیت
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y -- ئەڤە دێ قەبارەی زێدە کەت
+scroll.ScrollingDirection = Enum.ScrollingDirection.Y
+scroll.ClipsDescendants = true
+
 local list = Instance.new("UIListLayout", scroll)
 list.Padding = UDim.new(0, 8)
+list.SortOrder = Enum.SortOrder.LayoutOrder
 
--- [ ٣. فه‌نكشنا دروستكرنا خانان ب دوگمه‌یا Stop و Copy ]
+-- [ ٣. فه‌نكشنا دروستكرنا خانان ]
 local function createEntry(soundId, ownerName)
     local idOnly = tostring(soundId):match("%d+")
     local entry = Instance.new("Frame", scroll)
-    entry.Size = UDim2.new(1, 0, 0, 70)
+    entry.Size = UDim2.new(1, -10, 0, 75) -- هندەک کێمتر دا سکرۆڵ بار دیار بیت
     entry.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     Instance.new("UICorner", entry)
 
     local info = Instance.new("TextLabel", entry)
     info.Size = UDim2.new(0.6, 0, 1, 0)
     info.Position = UDim2.new(0, 10, 0, 0)
-    info.Text = "Xودان: " .. ownerName .. "\nID: " .. idOnly
+    info.Text = "ودان: " .. ownerName .. "\nID: " .. idOnly
     info.TextColor3 = Color3.new(1, 1, 1)
     info.TextXAlignment = Enum.TextXAlignment.Left
     info.BackgroundTransparency = 1
+    info.Font = Enum.Font.GothamBold
+    info.TextSize = 14
 
-    -- دوگمه‌یا Copy
     local cpBtn = Instance.new("TextButton", entry)
-    cpBtn.Size = UDim2.new(0, 60, 0, 25)
+    cpBtn.Size = UDim2.new(0, 70, 0, 28)
     cpBtn.Position = UDim2.new(0.7, 0, 0.15, 0)
     cpBtn.Text = "Copy ID"
     cpBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
@@ -93,12 +99,14 @@ local function createEntry(soundId, ownerName)
     cpBtn.MouseButton1Click:Connect(function()
         if setclipboard then
             setclipboard(idOnly)
+            cpBtn.Text = "Copied!"
+            task.wait(1)
+            cpBtn.Text = "Copy ID"
         end
     end)
 
-    -- دوگمه‌یا Listen / Stop
     local lsBtn = Instance.new("TextButton", entry)
-    lsBtn.Size = UDim2.new(0, 60, 0, 25)
+    lsBtn.Size = UDim2.new(0, 70, 0, 28)
     lsBtn.Position = UDim2.new(0.7, 0, 0.55, 0)
     lsBtn.Text = "Listen"
     lsBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
@@ -113,7 +121,6 @@ local function createEntry(soundId, ownerName)
         end
         
         if lsBtn.Text == "Listen" then
-            -- ڕاوه‌ستاندنا هه‌می دوگمه‌یێن دی یێن "Stop"
             for _, v in pairs(scroll:GetDescendants()) do
                 if v:IsA("TextButton") and v.Text == "Stop" then
                     v.Text = "Listen"
@@ -145,7 +152,9 @@ local function check(v)
         local id = v.SoundId:match("%d+")
         if id and not lastSeen[id] then
             lastSeen[id] = true
-            createEntry(id, "یاریزان")
+            -- لێرە ناڤێ یاریزانی دروست دکەین ئەگەر هەبیت
+            local owner = "یاریزان"
+            createEntry(id, owner)
         end
     end
 end
