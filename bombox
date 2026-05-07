@@ -1,21 +1,20 @@
-Local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- [ ناڤێ سكرێپتی یێ نوی ]
 local ScriptTitle = "K3 Boombox Tracker"
 
 local screenGui = Instance.new("ScreenGui", playerGui)
-screenGui.Name = "K3_Tracker"
+screenGui.Name = "K3_Tracker_Draggable"
 screenGui.ResetOnSpawn = false
 
 local lastSeen = {}
 local currentPreview = nil
 
--- [ ١. دوگمه‌یا خڕ یا لایێ شاشێ ]
+-- [ ١. دوگمه‌یا K3 ]
 local toggleBtn = Instance.new("TextButton", screenGui)
 toggleBtn.Size = UDim2.new(0, 55, 0, 55)
 toggleBtn.Position = UDim2.new(0, 10, 0.5, 0)
@@ -31,10 +30,12 @@ stroke.Thickness = 2
 
 -- [ ٢. پانێلا سه‌ره‌كی ]
 local panel = Instance.new("Frame", screenGui)
-panel.Size = UDim2.new(0, 320, 0, 420)
-panel.Position = UDim2.new(0.5, -160, 0.25, 0)
+panel.Size = UDim2.new(0, 300, 0, 380)
+panel.Position = UDim2.new(0.5, -150, 0.3, 0)
 panel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 panel.Visible = true
+panel.Active = true -- دا بشێی بجولینی
+panel.Draggable = true -- ئەڤە ڕێ ددەتێ ب کێش کەی (بۆ مۆبایل و کۆمپیۆتەر)
 Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
 toggleBtn.MouseButton1Click:Connect(function()
@@ -43,38 +44,38 @@ toggleBtn.MouseButton1Click:Connect(function()
 end)
 
 local header = Instance.new("Frame", panel)
-header.Size = UDim2.new(1, 0, 0, 50)
+header.Size = UDim2.new(1, 0, 0, 45)
 header.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Instance.new("UICorner", header)
 
 local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1, 0, 1, 0)
-title.Text = ScriptTitle
+title.Text = ScriptTitle .. " (Drag Me)"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.GothamBold
+title.TextSize = 14
 title.BackgroundTransparency = 1
 
--- [ چاککرنا سکرۆلێ ل ڤێرێ ]
+-- [ سکرۆڵ ]
 local scroll = Instance.new("ScrollingFrame", panel)
-scroll.Size = UDim2.new(1, -20, 1, -70)
-scroll.Position = UDim2.new(0, 10, 0, 60)
+scroll.Size = UDim2.new(1, -15, 1, -60)
+scroll.Position = UDim2.new(0, 7.5, 0, 55)
 scroll.BackgroundTransparency = 1
-scroll.ScrollBarThickness = 6
-scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0) -- بلا سفر بیت
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y -- ئەڤە دێ قەبارەی زێدە کەت
+scroll.ScrollBarThickness = 5
+scroll.ScrollBarImageColor3 = Color3.fromRGB(200, 200, 200)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroll.ScrollingDirection = Enum.ScrollingDirection.Y
-scroll.ClipsDescendants = true
 
 local list = Instance.new("UIListLayout", scroll)
 list.Padding = UDim.new(0, 8)
 list.SortOrder = Enum.SortOrder.LayoutOrder
 
--- [ ٣. فه‌نكشنا دروستكرنا خانان ]
+-- [ ٣. فەنکشنا دروستکرنا خانان ]
 local function createEntry(soundId, ownerName)
     local idOnly = tostring(soundId):match("%d+")
     local entry = Instance.new("Frame", scroll)
-    entry.Size = UDim2.new(1, -10, 0, 75) -- هندەک کێمتر دا سکرۆڵ بار دیار بیت
+    entry.Size = UDim2.new(1, -5, 0, 70)
     entry.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     Instance.new("UICorner", entry)
 
@@ -84,86 +85,63 @@ local function createEntry(soundId, ownerName)
     info.Text = "ودان: " .. ownerName .. "\nID: " .. idOnly
     info.TextColor3 = Color3.new(1, 1, 1)
     info.TextXAlignment = Enum.TextXAlignment.Left
+    info.Font = Enum.Font.Gotham
+    info.TextSize = 13
     info.BackgroundTransparency = 1
-    info.Font = Enum.Font.GothamBold
-    info.TextSize = 14
 
     local cpBtn = Instance.new("TextButton", entry)
-    cpBtn.Size = UDim2.new(0, 70, 0, 28)
-    cpBtn.Position = UDim2.new(0.7, 0, 0.15, 0)
-    cpBtn.Text = "Copy ID"
-    cpBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    cpBtn.Size = UDim2.new(0, 65, 0, 25)
+    cpBtn.Position = UDim2.new(0.72, 0, 0.15, 0)
+    cpBtn.Text = "Copy"
+    cpBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
     cpBtn.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", cpBtn)
 
     cpBtn.MouseButton1Click:Connect(function()
         if setclipboard then
             setclipboard(idOnly)
-            cpBtn.Text = "Copied!"
-            task.wait(1)
-            cpBtn.Text = "Copy ID"
+            cpBtn.Text = "Done"
+            task.wait(0.5)
+            cpBtn.Text = "Copy"
         end
     end)
 
     local lsBtn = Instance.new("TextButton", entry)
-    lsBtn.Size = UDim2.new(0, 70, 0, 28)
-    lsBtn.Position = UDim2.new(0.7, 0, 0.55, 0)
+    lsBtn.Size = UDim2.new(0, 65, 0, 25)
+    lsBtn.Position = UDim2.new(0.72, 0, 0.55, 0)
     lsBtn.Text = "Listen"
-    lsBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+    lsBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
     lsBtn.TextColor3 = Color3.new(1, 1, 1)
     Instance.new("UICorner", lsBtn)
 
     lsBtn.MouseButton1Click:Connect(function()
-        if currentPreview then 
-            currentPreview:Stop()
-            currentPreview:Destroy()
-            currentPreview = nil
-        end
-        
+        if currentPreview then currentPreview:Stop() currentPreview:Destroy() end
         if lsBtn.Text == "Listen" then
             for _, v in pairs(scroll:GetDescendants()) do
-                if v:IsA("TextButton") and v.Text == "Stop" then
-                    v.Text = "Listen"
-                    v.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-                end
+                if v:IsA("TextButton") and v.Text == "Stop" then v.Text = "Listen" v.BackgroundColor3 = Color3.fromRGB(0, 100, 0) end
             end
-
             lsBtn.Text = "Stop"
-            lsBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+            lsBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
             currentPreview = Instance.new("Sound", SoundService)
             currentPreview.SoundId = "rbxassetid://" .. idOnly
-            currentPreview.Volume = 2
+            currentPreview.PlayOnRemove = false
             currentPreview:Play()
-            
-            currentPreview.Ended:Connect(function()
-                lsBtn.Text = "Listen"
-                lsBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
-            end)
         else
             lsBtn.Text = "Listen"
-            lsBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+            lsBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
         end
     end)
 end
 
--- [ ٤. لێگه‌ڕیان ب دیڤ ده‌نگان ]
 local function check(v)
     if v:IsA("Sound") and v.SoundId ~= "" then
         local id = v.SoundId:match("%d+")
         if id and not lastSeen[id] then
             lastSeen[id] = true
-            -- لێرە ناڤێ یاریزانی دروست دکەین ئەگەر هەبیت
-            local owner = "یاریزان"
-            createEntry(id, owner)
+            createEntry(id, "یاریزان")
         end
     end
 end
 
-workspace.DescendantAdded:Connect(function(v)
-    task.wait(0.1)
-    check(v)
-end)
-
-for _, v in pairs(workspace:GetDescendants()) do
-    check(v)
-end
+workspace.DescendantAdded:Connect(function(v) task.wait(0.1) check(v) end)
+for _, v in pairs(workspace:GetDescendants()) do check(v) end
